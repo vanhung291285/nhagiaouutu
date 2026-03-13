@@ -133,7 +133,7 @@ export default function Layout() {
             Thăm dò dư luận nhà giáo ưu tú
           </p>
           <p className="text-[10px] opacity-50">
-            &copy; {new Date().getFullYear()} Hội đồng xét duyệt
+            &copy; {new Date().getFullYear()} 
           </p>
           <Link to="/admin" className="inline-flex items-center gap-1 mt-2 text-[10px] text-blue-500/50 hover:text-blue-400">
             <Settings className="h-3 w-3" /> Quản trị hệ thống
