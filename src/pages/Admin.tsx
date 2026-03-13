@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { getCandidateData, getAchievementsFiles } from '../store/mockData';
-import { Download, Search, Trash2, Edit, Upload, FileSpreadsheet, FileText, Settings, BarChart3, Plus, X, AlertCircle } from 'lucide-react';
+import { Download, Search, Trash2, Edit, Upload, FileSpreadsheet, FileText, Settings, BarChart3, Plus, X, AlertCircle, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -26,8 +27,8 @@ export default function Admin() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     
     if (isSupabaseConfigured()) {
       try {
@@ -51,9 +52,9 @@ export default function Admin() {
           
         if (!candError && candData) {
           setCandidate(candData);
-        } else {
-          // If no data in Supabase, use mock data as a starting point but don't save it yet
-          setCandidate(getCandidateData());
+        } else if (!candError && !candData) {
+          // Only use mock data if Supabase is confirmed empty AND we don't have data yet
+          setCandidate(prev => prev || getCandidateData());
         }
 
         // Fetch Achievements
@@ -64,13 +65,12 @@ export default function Admin() {
           
         if (!achError && achData) {
           setAchievementsFiles(achData);
-        } else {
-          setAchievementsFiles(getAchievementsFiles());
+        } else if (!achError && !achData) {
+          setAchievementsFiles(prev => prev.length > 0 ? prev : getAchievementsFiles());
         }
       } catch (error) {
         console.error('Error fetching data from Supabase:', error);
-        setCandidate(getCandidateData());
-        setAchievementsFiles(getAchievementsFiles());
+        setCandidate(prev => prev || getCandidateData());
       }
     } else {
       const localResp = localStorage.getItem('survey_responses');
@@ -79,7 +79,7 @@ export default function Admin() {
       setAchievementsFiles(getAchievementsFiles());
     }
     
-    setLoading(false);
+    if (!isSilent) setLoading(false);
   };
 
   useEffect(() => {
@@ -214,8 +214,8 @@ export default function Admin() {
         }
 
         alert('CHÚC MỪNG: Dữ liệu đã được lưu vĩnh viễn lên Supabase! Bạn có thể xem từ bất kỳ máy tính nào.');
-        // Re-fetch to get the latest state (including any generated IDs)
-        fetchData();
+        // Re-fetch silently to get the latest state (including any generated IDs)
+        fetchData(true);
       } catch (error: any) {
         console.error('Supabase Save Error:', error);
         const msg = error.message || JSON.stringify(error);
@@ -600,16 +600,24 @@ export default function Admin() {
           )}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-slate-800">Thông tin Nhà giáo</h2>
-            <button 
-              onClick={handleSaveCandidate} 
-              disabled={isSaving}
-              className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {isSaving ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : <Edit className="h-4 w-4" />}
-              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
-            </button>
+            <div className="flex gap-2">
+              <Link 
+                to="/" 
+                className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-sm font-medium transition-colors"
+              >
+                <Eye className="h-4 w-4" /> Xem hồ sơ
+              </Link>
+              <button 
+                onClick={handleSaveCandidate} 
+                disabled={isSaving}
+                className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isSaving ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : <Edit className="h-4 w-4" />}
+                {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

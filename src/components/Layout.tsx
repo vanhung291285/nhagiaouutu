@@ -5,7 +5,7 @@ export default function Layout() {
   const location = useLocation();
   
   const navItems = [
-    { path: '/', label: 'Trang chủ', icon: BookOpen },
+    { path: '/', label: 'Hồ sơ nhà giáo', icon: BookOpen },
     { path: '/achievements', label: 'Hồ sơ thành tích', icon: Award },
     { path: '/survey', label: 'Khảo sát ý kiến', icon: ClipboardList, highlight: true },
   ];

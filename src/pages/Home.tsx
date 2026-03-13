@@ -4,11 +4,13 @@ import { Calendar, Briefcase, MapPin, Clock, GraduationCap, Award } from 'lucide
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function Home() {
-  const [candidate, setCandidate] = useState(getCandidateData());
+  const [candidate, setCandidate] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCandidate = async () => {
+      setLoading(true);
+      
       if (isSupabaseConfigured()) {
         try {
           const { data, error } = await supabase
@@ -19,18 +21,28 @@ export default function Home() {
           
           if (!error && data) {
             setCandidate(data);
+            setLoading(false);
+            return;
+          }
+          
+          if (error) {
+            console.error('Supabase fetch error:', error);
           }
         } catch (error) {
           console.error('Error fetching candidate from Supabase:', error);
         }
       }
+
+      // Fallback to localStorage or mock data
+      const localData = getCandidateData();
+      setCandidate(localData);
       setLoading(false);
     };
 
     fetchCandidate();
   }, []);
 
-  if (loading) {
+  if (loading || !candidate) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

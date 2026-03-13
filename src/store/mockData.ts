@@ -1,14 +1,14 @@
 export const mockCandidate = {
-  name: "Nguyễn Văn A",
+  name: "Lê Thị Thanh Nhã",
   subtitle: "Ứng viên đề nghị xét tặng danh hiệu \"Nhà giáo Ưu Tú\"",
-  dob: "1975-05-15",
-  position: "Hiệu trưởng",
-  unit: "Trường THPT Chuyên Lê Hồng Phong",
-  yearsOfWork: 25,
-  qualifications: "Tiến sĩ Quản lý Giáo dục",
-  achievements: "Nhà giáo Ưu tú (2015), Huân chương Lao động hạng Ba (2020)",
-  intro: "Thầy Nguyễn Văn A là một nhà giáo mẫu mực, có nhiều đóng góp to lớn cho sự nghiệp giáo dục của tỉnh nhà. Trong suốt 25 năm công tác, thầy luôn tận tâm với nghề, đổi mới phương pháp giảng dạy và quản lý, đào tạo nhiều thế hệ học sinh giỏi quốc gia và quốc tế.",
-  avatarUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=256&h=256"
+  dob: "1980-01-01",
+  position: "Giáo viên",
+  unit: "Trường THPT",
+  yearsOfWork: 20,
+  qualifications: "Thạc sĩ Giáo dục",
+  achievements: "Chiến sĩ thi đua cơ sở, Bằng khen của Bộ Giáo dục",
+  intro: "Cô Lê Thị Thanh Nhã là một nhà giáo tận tâm, luôn nỗ lực trong công tác giảng dạy và bồi dưỡng học sinh.",
+  avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256&h=256"
 };
 
 export const getCandidateData = () => {
