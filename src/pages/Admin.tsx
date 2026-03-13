@@ -17,51 +17,10 @@ export default function Admin() {
   const [isInitializing, setIsInitializing] = useState(false);
   const [activeTab, setActiveTab] = useState<'candidate' | 'survey' | 'charts'>('survey');
 
-  useEffect(() => {
-    const checkAdminTable = async () => {
-      if (isSupabaseConfigured()) {
-        try {
-          const { count, error } = await supabase
-            .from('admin_users')
-            .select('*', { count: 'exact', head: true });
-          
-          if (!error && count === 0) {
-            setIsAdminTableEmpty(true);
-          }
-        } catch (err) {
-          console.error('Error checking admin table:', err);
-        }
-      }
-    };
-    checkAdminTable();
-  }, []);
-
-  const handleInitializeAdmin = async () => {
-    if (!username || !password) {
-      alert('Vui lòng nhập Tên đăng nhập và Mật khẩu muốn tạo!');
-      return;
-    }
-
-    setIsInitializing(true);
-    try {
-      const { error } = await supabase
-        .from('admin_users')
-        .insert([{ username, password }]);
-
-      if (error) throw error;
-      
-      alert('Khởi tạo tài khoản quản trị thành công! Bây giờ bạn có thể đăng nhập.');
-      setIsAdminTableEmpty(false);
-    } catch (err: any) {
-      alert(`Lỗi khởi tạo: ${err.message}`);
-    } finally {
-      setIsInitializing(false);
-    }
-  };
   const [responses, setResponses] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [candidate, setCandidate] = useState(getCandidateData());
-  const [achievementsFiles, setAchievementsFiles] = useState(getAchievementsFiles());
+  const [candidate, setCandidate] = useState<any>(null);
+  const [achievementsFiles, setAchievementsFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newFile, setNewFile] = useState({ category: 'Thành tích giảng dạy', fileName: '', size: 0 });
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -93,8 +52,8 @@ export default function Admin() {
         if (!candError && candData) {
           setCandidate(candData);
         } else {
-          // If no data or error, keep mock data but don't log error if it's just "not found"
-          if (candError) console.error('Error fetching candidate:', candError);
+          // If no data in Supabase, use mock data as a starting point but don't save it yet
+          setCandidate(getCandidateData());
         }
 
         // Fetch Achievements
@@ -105,9 +64,13 @@ export default function Admin() {
           
         if (!achError && achData) {
           setAchievementsFiles(achData);
+        } else {
+          setAchievementsFiles(getAchievementsFiles());
         }
       } catch (error) {
         console.error('Error fetching data from Supabase:', error);
+        setCandidate(getCandidateData());
+        setAchievementsFiles(getAchievementsFiles());
       }
     } else {
       const localResp = localStorage.getItem('survey_responses');
@@ -120,8 +83,47 @@ export default function Admin() {
   };
 
   useEffect(() => {
+    const checkAdminTable = async () => {
+      if (isSupabaseConfigured()) {
+        try {
+          const { count, error } = await supabase
+            .from('admin_users')
+            .select('*', { count: 'exact', head: true });
+          
+          if (!error && count === 0) {
+            setIsAdminTableEmpty(true);
+          }
+        } catch (err) {
+          console.error('Error checking admin table:', err);
+        }
+      }
+    };
+    checkAdminTable();
     fetchData();
   }, []);
+
+  const handleInitializeAdmin = async () => {
+    if (!username || !password) {
+      alert('Vui lòng nhập Tên đăng nhập và Mật khẩu muốn tạo!');
+      return;
+    }
+
+    setIsInitializing(true);
+    try {
+      const { error } = await supabase
+        .from('admin_users')
+        .insert([{ username, password }]);
+
+      if (error) throw error;
+      
+      alert('Khởi tạo tài khoản quản trị thành công! Bây giờ bạn có thể đăng nhập.');
+      setIsAdminTableEmpty(false);
+    } catch (err: any) {
+      alert(`Lỗi khởi tạo: ${err.message}`);
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   // Re-fetch data when logged in to ensure we have the latest from Supabase
   useEffect(() => {
@@ -383,6 +385,15 @@ export default function Admin() {
     r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     r.unit.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading || !candidate) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-slate-500 animate-pulse">Đang tải dữ liệu hệ thống...</p>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return (
