@@ -7,7 +7,8 @@ export const mockCandidate = {
   yearsOfWork: 20,
   qualifications: "Thạc sĩ Giáo dục",
   achievements: "Chiến sĩ thi đua cơ sở, Bằng khen của Bộ Giáo dục",
-  intro: "Cô Lê Thị Thanh Nhã là một nhà giáo tận tâm, luôn nỗ lực trong công tác giảng dạy và bồi dưỡng học sinh.",
+  bio: "Cô Lê Thị Thanh Nhã là một nhà giáo tận tâm, luôn nỗ lực trong công tác giảng dạy và bồi dưỡng học sinh.",
+  intro: "<p>Nhập thành tích đạt được tại đây...</p>",
   avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256&h=256"
 };
 

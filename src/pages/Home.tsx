@@ -127,7 +127,18 @@ export default function Home() {
 
             {/* Right Column: Intro */}
             <div className="lg:col-span-2 space-y-6">
-              <div>
+              {candidate.bio && (
+                <div>
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">Thông tin nhà giáo</h2>
+                  <div className="prose prose-slate max-w-none">
+                    <p className="text-slate-600 leading-relaxed text-base sm:text-lg whitespace-pre-line">
+                      {candidate.bio}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              <div className={candidate.bio ? "pt-6 border-t border-slate-200" : ""}>
                 <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">Thành tích đạt được</h2>
                 <div className="prose prose-slate max-w-none prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-slate-300 prose-td:p-2 prose-th:border prose-th:border-slate-300 prose-th:p-2 prose-th:bg-slate-50">
                   <div 

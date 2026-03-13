@@ -718,6 +718,10 @@ export default function Admin() {
                 <input type="text" value={candidate.achievements} onChange={e => handleCandidateChange('achievements', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
               </div>
               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Thông tin nhà giáo (Giới thiệu chung)</label>
+                <textarea rows={4} value={candidate.bio || ''} onChange={e => handleCandidateChange('bio', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Nhập thông tin giới thiệu chung về nhà giáo..."></textarea>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Thành tích đạt được</label>
                 <div className="border border-slate-300 rounded-lg overflow-hidden">
                   <JoditEditor
