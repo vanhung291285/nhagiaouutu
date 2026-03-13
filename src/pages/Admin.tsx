@@ -65,65 +65,70 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [newFile, setNewFile] = useState({ category: 'Thành tích giảng dạy', fileName: '', size: 0 });
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    
+    if (isSupabaseConfigured()) {
+      try {
+        // Fetch Responses
+        const { data: respData, error: respError } = await supabase
+          .from('survey_responses')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (respError) throw respError;
+        if (respData) {
+          setResponses(respData.map(item => ({ ...item, createdAt: item.created_at })));
+        }
+
+        // Fetch Candidate - Specifically ID 1
+        const { data: candData, error: candError } = await supabase
+          .from('candidate_data')
+          .select('*')
+          .eq('id', 1)
+          .maybeSingle();
+          
+        if (!candError && candData) {
+          setCandidate(candData);
+        } else {
+          // If no data or error, keep mock data but don't log error if it's just "not found"
+          if (candError) console.error('Error fetching candidate:', candError);
+        }
+
+        // Fetch Achievements
+        const { data: achData, error: achError } = await supabase
+          .from('achievements_files')
+          .select('*')
+          .order('created_at', { ascending: true });
+          
+        if (!achError && achData) {
+          setAchievementsFiles(achData);
+        }
+      } catch (error) {
+        console.error('Error fetching data from Supabase:', error);
+      }
+    } else {
+      const localResp = localStorage.getItem('survey_responses');
+      if (localResp) setResponses(JSON.parse(localResp));
+      setCandidate(getCandidateData());
+      setAchievementsFiles(getAchievementsFiles());
+    }
+    
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      
-      if (isSupabaseConfigured()) {
-        try {
-          // Fetch Responses
-          const { data: respData, error: respError } = await supabase
-            .from('survey_responses')
-            .select('*')
-            .order('created_at', { ascending: false });
-            
-          if (respError) throw respError;
-          if (respData) {
-            setResponses(respData.map(item => ({ ...item, createdAt: item.created_at })));
-          }
-
-          // Fetch Candidate
-          const { data: candData, error: candError } = await supabase
-            .from('candidate_data')
-            .select('*')
-            .single();
-            
-          if (!candError && candData) {
-            setCandidate(candData);
-          } else {
-            setCandidate(getCandidateData());
-          }
-
-          // Fetch Achievements
-          const { data: achData, error: achError } = await supabase
-            .from('achievements_files')
-            .select('*')
-            .order('created_at', { ascending: true });
-            
-          if (!achError && achData) {
-            setAchievementsFiles(achData);
-          } else {
-            setAchievementsFiles(getAchievementsFiles());
-          }
-        } catch (error) {
-          console.error('Error fetching data from Supabase:', error);
-          // Fallback to local storage
-          setCandidate(getCandidateData());
-          setAchievementsFiles(getAchievementsFiles());
-        }
-      } else {
-        const localResp = localStorage.getItem('survey_responses');
-        if (localResp) setResponses(JSON.parse(localResp));
-        setCandidate(getCandidateData());
-        setAchievementsFiles(getAchievementsFiles());
-      }
-      
-      setLoading(false);
-    };
-
     fetchData();
   }, []);
+
+  // Re-fetch data when logged in to ensure we have the latest from Supabase
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchData();
+    }
+  }, [isLoggedIn]);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -171,6 +176,7 @@ export default function Admin() {
 
   const handleSaveCandidate = async () => {
     if (isSupabaseConfigured()) {
+      setIsSaving(true);
       try {
         // Chuẩn bị dữ liệu: Loại bỏ id cũ nếu có để tránh xung đột
         const { id: _oldId, ...candidateData } = candidate;
@@ -196,21 +202,26 @@ export default function Admin() {
         if (delError) throw delError;
 
         if (achievementsFiles.length > 0) {
-          // Giữ nguyên ID để khớp với bảng đã tạo
+          // Loại bỏ ID cũ để Supabase tự tạo ID mới hoặc dùng ID hợp lệ
+          const filesToInsert = achievementsFiles.map(({ id: _id, ...rest }) => rest);
           const { error: insError } = await supabase
             .from('achievements_files')
-            .insert(achievementsFiles);
+            .insert(filesToInsert);
           
           if (insError) throw insError;
         }
 
         alert('CHÚC MỪNG: Dữ liệu đã được lưu vĩnh viễn lên Supabase! Bạn có thể xem từ bất kỳ máy tính nào.');
+        // Re-fetch to get the latest state (including any generated IDs)
+        fetchData();
       } catch (error: any) {
         console.error('Supabase Save Error:', error);
         const msg = error.message || JSON.stringify(error);
         alert(`LỖI LƯU TRỮ: ${msg}\n\nLưu ý: Dữ liệu hiện chỉ đang lưu tạm trên máy này. Hãy kiểm tra cấu hình Supabase.`);
         localStorage.setItem('candidate_data', JSON.stringify(candidate));
         localStorage.setItem('achievements_files', JSON.stringify(achievementsFiles));
+      } finally {
+        setIsSaving(false);
       }
     } else {
       localStorage.setItem('candidate_data', JSON.stringify(candidate));
@@ -578,8 +589,15 @@ export default function Admin() {
           )}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-slate-800">Thông tin Nhà giáo</h2>
-            <button onClick={handleSaveCandidate} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors">
-              <Edit className="h-4 w-4" /> Lưu thay đổi
+            <button 
+              onClick={handleSaveCandidate} 
+              disabled={isSaving}
+              className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isSaving ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : <Edit className="h-4 w-4" />}
+              {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
             </button>
           </div>
 
