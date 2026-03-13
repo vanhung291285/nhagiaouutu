@@ -18,6 +18,7 @@ export default function Admin() {
   const [achievementsFiles, setAchievementsFiles] = useState(getAchievementsFiles());
   const [loading, setLoading] = useState(true);
   const [newFile, setNewFile] = useState({ category: 'Thành tích giảng dạy', fileName: '', size: 0 });
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -152,6 +153,55 @@ export default function Admin() {
 
   const handleCandidateChange = (field: string, value: string | number) => {
     setCandidate(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isSupabaseConfigured()) {
+      alert('Vui lòng cấu hình Supabase để sử dụng tính năng tải ảnh lên.');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn tệp hình ảnh (jpg, png, webp...).');
+      return;
+    }
+
+    // Validate size (max 2MB for avatar)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Dung lượng ảnh quá lớn (tối đa 2MB).');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
+      const filePath = `public/${fileName}`;
+
+      // Upload to 'avatars' bucket
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setCandidate(prev => ({ ...prev, avatarUrl: publicUrl }));
+      alert('Tải ảnh đại diện lên thành công!');
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      alert(`Lỗi khi tải ảnh lên: ${error.message || 'Vui lòng kiểm tra lại bucket "avatars" trong Supabase Storage.'}`);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -376,18 +426,54 @@ export default function Admin() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="col-span-1 space-y-4">
               <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center">
-                <img src={candidate.avatarUrl} alt="Avatar" className="w-32 h-32 rounded-full mx-auto mb-4 object-cover" referrerPolicy="no-referrer" />
-                <div className="space-y-2">
-                  <label className="block text-xs text-slate-500 text-left">URL Ảnh đại diện</label>
-                  <input 
-                    type="text" 
-                    value={candidate.avatarUrl} 
-                    onChange={e => handleCandidateChange('avatarUrl', e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-xs"
-                    placeholder="https://images.unsplash.com/..."
-                  />
+                <div className="relative group w-32 h-32 mx-auto mb-4">
+                  <img src={candidate.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover border-4 border-white shadow-sm" referrerPolicy="no-referrer" />
+                  {isUploadingAvatar && (
+                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Dán URL ảnh từ Unsplash hoặc nguồn khác.</p>
+                
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-2">
+                    <label className="block text-xs font-medium text-slate-700 text-left">Tải ảnh từ máy tính</label>
+                    <input 
+                      type="file" 
+                      id="avatar-upload" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      disabled={isUploadingAvatar}
+                    />
+                    <label 
+                      htmlFor="avatar-upload"
+                      className={`flex items-center justify-center gap-2 px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium cursor-pointer transition-colors ${isUploadingAvatar ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <Upload className="h-3 w-3" /> {isUploadingAvatar ? 'Đang tải...' : 'Chọn ảnh từ máy'}
+                    </label>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-slate-200"></span>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-slate-400">Hoặc dán URL</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <input 
+                      type="text" 
+                      value={candidate.avatarUrl} 
+                      onChange={e => handleCandidateChange('avatarUrl', e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-xs"
+                      placeholder="https://images.unsplash.com/..."
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-3 italic">Lưu ý: Để tải ảnh lên, bạn cần tạo bucket tên "avatars" trong Supabase Storage.</p>
               </div>
 
               <div className="border border-slate-200 rounded-xl p-4">
