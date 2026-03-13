@@ -383,8 +383,8 @@ export default function Admin() {
   };
 
   const filteredResponses = responses.filter(r => 
-    r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.unit.toLowerCase().includes(searchTerm.toLowerCase())
+    (r.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (r.unit || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading || !candidate) {
@@ -551,7 +551,7 @@ export default function Admin() {
                           {response.q3}
                         </span>
                       </td>
-                      <td className="px-6 py-4">{format(new Date(response.createdAt), 'dd/MM/yyyy HH:mm')}</td>
+                      <td className="px-6 py-4">{response.createdAt ? format(new Date(response.createdAt), 'dd/MM/yyyy HH:mm') : 'N/A'}</td>
                       <td className="px-6 py-4 text-right">
                         <button 
                           onClick={() => handleDelete(response.id)}
