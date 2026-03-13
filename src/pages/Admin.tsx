@@ -179,8 +179,12 @@ export default function Admin() {
         if (delError) throw delError;
 
         if (achievementsFiles.length > 0) {
-          // Loại bỏ ID cũ để Supabase tự tạo ID mới hoặc dùng ID hợp lệ
-          const filesToInsert = achievementsFiles.map(({ id: _id, ...rest }) => rest);
+          // Tạo ID mới cho các file chưa có ID hoặc đảm bảo ID hợp lệ
+          const filesToInsert = achievementsFiles.map(file => ({
+            ...file,
+            id: file.id || Date.now() + Math.floor(Math.random() * 1000)
+          }));
+          
           const { error: insError } = await supabase
             .from('achievements_files')
             .insert(filesToInsert);
