@@ -13,7 +13,7 @@ export default function PDFPreviewModal({ fileUrl, onClose }: Props) {
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <h3 className="font-semibold text-slate-800">Xem trước tài liệu</h3>
           <button onClick={onClose} className="p-2 text-slate-500 hover:bg-slate-100 rounded-full">
-            <X className=\"h-5 w-5\" />
+            <X className="h-5 w-5" />
           </button>
         </div>
         <div className="flex-1 w-full h-[calc(90vh-60px)]">
