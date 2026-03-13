@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { getAchievementsFiles } from '../store/mockData';
 import { FileText, Download, Eye, File, Image as ImageIcon, Award } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import PDFPreviewModal from '../components/PDFPreviewModal';
 
 export default function Achievements() {
   const [files, setFiles] = useState(getAchievementsFiles());
   const [loading, setLoading] = useState(true);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -62,6 +64,7 @@ export default function Achievements() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {previewFile && <PDFPreviewModal fileUrl={previewFile} onClose={() => setPreviewFile(null)} />}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-10">
         <h1 className="text-2xl font-bold text-slate-900 mb-2">Hồ sơ thành tích</h1>
         <p className="text-slate-500 mb-8">Danh sách các tài liệu, minh chứng về thành tích của nhà giáo.</p>
@@ -91,12 +94,24 @@ export default function Achievements() {
                           <p className="text-xs text-slate-500">{formatSize(file.size)}</p>
                         </div>
                         <div className="flex gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md" title="Xem trước">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md" title="Tải về">
+                          {file.fileType === 'application/pdf' && (
+                            <button 
+                              onClick={() => setPreviewFile(file.fileUrl || file.file_url)}
+                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md" 
+                              title="Xem trước"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          )}
+                          <a 
+                            href={file.fileUrl || file.file_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md" 
+                            title="Tải về"
+                          >
                             <Download className="h-4 w-4" />
-                          </button>
+                          </a>
                         </div>
                       </div>
                     ))}
