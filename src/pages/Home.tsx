@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { getCandidateData, getAchievementsFiles } from '../store/mockData';
-import { Calendar, Briefcase, MapPin, Clock, GraduationCap, Award, FileText, Download } from 'lucide-react';
+import { Calendar, Briefcase, MapPin, Clock, GraduationCap, Award, FileText, Download, Eye } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import PDFPreviewModal from '../components/PDFPreviewModal';
 
 export default function Home() {
   const [candidate, setCandidate] = useState<any>(null);
   const [achievementsFiles, setAchievementsFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,6 +59,7 @@ export default function Home() {
 
   return (
     <div className="animate-in fade-in duration-500">
+      {previewFile && <PDFPreviewModal fileUrl={previewFile} onClose={() => setPreviewFile(null)} />}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {/* Cover Banner */}
         <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-700"></div>
@@ -158,11 +161,8 @@ export default function Home() {
                   <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">Hồ sơ minh chứng</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {achievementsFiles.map(file => (
-                      <a 
+                      <div 
                         key={file.id} 
-                        href={file.fileUrl || file.file_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
                         className="flex items-center p-4 border border-slate-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-colors group"
                       >
                         <div className="bg-blue-100 p-3 rounded-lg mr-4 group-hover:bg-blue-200 transition-colors">
@@ -172,8 +172,27 @@ export default function Home() {
                           <p className="text-sm font-medium text-slate-900 truncate">{file.fileName || file.file_name}</p>
                           <p className="text-xs text-slate-500 truncate">{file.category}</p>
                         </div>
-                        <Download className="h-5 w-5 text-slate-400 group-hover:text-blue-600 ml-2 shrink-0" />
-                      </a>
+                        <div className="flex gap-2">
+                          {file.fileType === 'application/pdf' && (
+                            <button 
+                              onClick={() => setPreviewFile(file.fileUrl || file.file_url)}
+                              className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
+                              title="Xem trước"
+                            >
+                              <Eye className="h-5 w-5" />
+                            </button>
+                          )}
+                          <a 
+                            href={file.fileUrl || file.file_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
+                            title="Tải xuống"
+                          >
+                            <Download className="h-5 w-5" />
+                          </a>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

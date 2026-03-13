@@ -180,10 +180,12 @@ export default function Admin() {
 
         if (achievementsFiles.length > 0) {
           // Tạo ID mới cho các file chưa có ID hoặc đảm bảo ID hợp lệ
-          const filesToInsert = achievementsFiles.map(file => ({
-            ...file,
-            id: file.id || Date.now() + Math.floor(Math.random() * 1000)
-          }));
+          const filesToInsert = achievementsFiles
+            .map(file => ({
+              ...file,
+              id: (file.id !== null && file.id !== undefined) ? String(file.id) : String(Date.now() + Math.floor(Math.random() * 1000))
+            }))
+            .filter(file => file.id !== null && file.id !== undefined);
           
           const { error: insError } = await supabase
             .from('achievements_files')
