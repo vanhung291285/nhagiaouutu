@@ -91,20 +91,28 @@ export default function Layout() {
         })}
       </nav>
 
-      {/* Footer */}
-      <footer className="bg-slate-800 text-slate-300 py-8 mt-auto hidden md:block">
+      {/* Footer (Desktop) */}
+      <footer className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-slate-300 py-10 mt-auto hidden md:block border-t-4 border-blue-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-            <div className="text-sm text-slate-400 text-center">
-              &copy; {new Date().getFullYear()} Thăm dò dư luận nhà giáo ưu tú Xét tặng Danh hiệu "Nhà giáo Ưu Tú".
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/10 p-2 rounded-lg backdrop-blur-sm">
+                <BookOpen className="h-5 w-5 text-blue-400" />
+              </div>
+              <span className="font-bold text-white tracking-wide uppercase text-sm">Hệ thống thăm dò dư luận</span>
+            </div>
+            
+            <div className="text-sm text-slate-400 text-center md:text-right">
+              <p className="font-medium text-slate-300 mb-1">Xét tặng Danh hiệu "Nhà giáo Ưu Tú"</p>
+              <p className="text-xs opacity-60">&copy; {new Date().getFullYear()} Bản quyền thuộc về Hội đồng xét duyệt.</p>
             </div>
           </div>
           
           {/* Subtle Admin Link */}
-          <div className="absolute right-4 bottom-0 md:right-8">
+          <div className="absolute right-4 -bottom-4 md:right-8">
             <Link 
               to="/admin" 
-              className="text-[10px] text-slate-600 hover:text-slate-500 transition-colors opacity-40 hover:opacity-100 flex items-center gap-1"
+              className="text-[10px] text-slate-500 hover:text-blue-400 transition-all opacity-30 hover:opacity-100 flex items-center gap-1 py-1"
             >
               <Settings className="h-3 w-3" />
               Quản trị
@@ -114,14 +122,21 @@ export default function Layout() {
       </footer>
 
       {/* Mobile Footer (Simplified) */}
-      <footer className="bg-slate-800 text-slate-400 py-6 md:hidden mb-20">
-        <div className="px-4 text-center">
-          <p className="text-[10px] leading-relaxed">
-            &copy; {new Date().getFullYear()} Thăm dò dư luận nhà giáo ưu tú<br/>
-            Xét tặng Danh hiệu "Nhà giáo Ưu Tú"
+      <footer className="bg-slate-900 text-slate-400 py-8 md:hidden mb-20 border-t-2 border-blue-600">
+        <div className="px-6 text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="bg-blue-600/20 p-2 rounded-full">
+              <BookOpen className="h-5 w-5 text-blue-400" />
+            </div>
+          </div>
+          <p className="text-[11px] leading-relaxed font-medium text-slate-300 uppercase tracking-wider">
+            Thăm dò dư luận nhà giáo ưu tú
           </p>
-          <Link to="/admin" className="inline-flex items-center gap-1 mt-3 text-[10px] opacity-50">
-            <Settings className="h-3 w-3" /> Quản trị
+          <p className="text-[10px] opacity-50">
+            &copy; {new Date().getFullYear()} Hội đồng xét duyệt
+          </p>
+          <Link to="/admin" className="inline-flex items-center gap-1 mt-2 text-[10px] text-blue-500/50 hover:text-blue-400">
+            <Settings className="h-3 w-3" /> Quản trị hệ thống
           </Link>
         </div>
       </footer>
