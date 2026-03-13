@@ -14,7 +14,8 @@ export default function Home() {
           const { data, error } = await supabase
             .from('candidate_data')
             .select('*')
-            .single();
+            .eq('id', 1)
+            .maybeSingle();
           
           if (!error && data) {
             setCandidate(data);
