@@ -10,7 +10,9 @@ import PublicResults from './PublicResults';
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [activeTab, setActiveTab] = useState<'candidate' | 'survey' | 'charts'>('survey');
   const [responses, setResponses] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,12 +81,38 @@ export default function Admin() {
     fetchData();
   }, []);
 
-  const handleLogin = (e: FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') {
-      setIsLoggedIn(true);
+    setIsLoggingIn(true);
+
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('username', username)
+          .eq('password', password)
+          .single();
+
+        if (error || !data) {
+          alert('Tên đăng nhập hoặc mật khẩu không chính xác!');
+        } else {
+          setIsLoggedIn(true);
+        }
+      } catch (err) {
+        console.error('Login error:', err);
+        alert('Lỗi kết nối hệ thống đăng nhập!');
+      } finally {
+        setIsLoggingIn(false);
+      }
     } else {
-      alert('Mật khẩu không đúng!');
+      // Fallback nếu chưa cấu hình Supabase
+      if (username === 'admin' && password === 'admin123') {
+        setIsLoggedIn(true);
+      } else {
+        alert('Sai thông tin đăng nhập (Chế độ Offline)!');
+      }
+      setIsLoggingIn(false);
     }
   };
 
@@ -294,29 +322,50 @@ export default function Admin() {
 
   if (!isLoggedIn) {
     return (
-      <div className="max-w-md mx-auto mt-20 bg-white rounded-2xl shadow-md border border-slate-200 p-8">
-        <div className="text-center mb-8">
-          <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Settings className="h-8 w-8 text-blue-600" />
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 w-full max-w-md animate-in fade-in zoom-in duration-300">
+          <div className="text-center mb-8">
+            <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Settings className="h-8 w-8 text-blue-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Quản trị hệ thống</h1>
+            <p className="text-slate-500 mt-2">Vui lòng đăng nhập để tiếp tục</p>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900">Đăng nhập Quản trị</h2>
-          <p className="text-slate-500 mt-2">Vui lòng nhập mật khẩu để tiếp tục</p>
+          
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập</label>
+              <input 
+                type="text" 
+                required
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Nhập tên đăng nhập..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Mật khẩu</label>
+              <input 
+                type="password" 
+                required
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Nhập mật khẩu..."
+              />
+            </div>
+            <button 
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              {isLoggingIn ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : 'Đăng nhập'}
+            </button>
+          </form>
         </div>
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <input 
-              type="password" 
-              placeholder="Mật khẩu (admin123)" 
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-            Đăng nhập
-          </button>
-        </form>
       </div>
     );
   }
