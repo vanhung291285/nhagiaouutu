@@ -1,6 +1,6 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import { getCandidateData, getAchievementsFiles } from '../store/mockData';
-import { Download, Search, Trash2, Edit, Upload, FileSpreadsheet, FileText, Settings, BarChart3, Plus, X } from 'lucide-react';
+import { Download, Search, Trash2, Edit, Upload, FileSpreadsheet, FileText, Settings, BarChart3, Plus, X, AlertCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -155,7 +155,7 @@ export default function Admin() {
     setCandidate(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -424,6 +424,27 @@ export default function Admin() {
 
       {activeTab === 'candidate' && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          {!isSupabaseConfigured() && (
+            <div className="mb-8 p-6 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-4">
+              <div className="flex items-center gap-3 text-amber-800">
+                <AlertCircle className="h-6 w-6" />
+                <h3 className="font-bold text-lg">Cấu hình Supabase chưa hoàn tất</h3>
+              </div>
+              <p className="text-amber-700 text-sm leading-relaxed">
+                Để ứng dụng có thể lưu trữ dữ liệu và ảnh đại diện lên đám mây, bạn cần thiết lập các thông tin kết nối trong menu <strong>Settings</strong> của AI Studio:
+              </p>
+              <div className="bg-white/50 p-4 rounded-lg border border-amber-100 space-y-2 font-mono text-xs text-amber-900">
+                <p>1. Mở menu <strong>Settings</strong> (biểu tượng bánh răng) ở góc trên bên phải.</p>
+                <p>2. Thêm 2 biến môi trường mới:</p>
+                <p className="pl-4 font-bold">• VITE_SUPABASE_URL</p>
+                <p className="pl-4 font-bold">• VITE_SUPABASE_ANON_KEY</p>
+                <p>3. Dán giá trị tương ứng từ dự án Supabase của bạn.</p>
+              </div>
+              <p className="text-amber-600 text-xs italic">
+                * Sau khi thêm, hãy làm mới (Refresh) trang web để áp dụng thay đổi.
+              </p>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-slate-800">Thông tin Nhà giáo</h2>
             <button onClick={handleSaveCandidate} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors">
