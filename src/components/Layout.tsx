@@ -66,12 +66,33 @@ export default function Layout() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 mb-16 md:mb-0">
         <Outlet />
       </main>
 
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-2 flex justify-around items-center z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                isActive ? 'text-blue-600' : 'text-slate-500'
+              }`}
+            >
+              <Icon className={`h-5 w-5 ${isActive ? 'fill-blue-50/50' : ''}`} />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
       {/* Footer */}
-      <footer className="bg-slate-800 text-slate-300 py-8 mt-auto">
+      <footer className="bg-slate-800 text-slate-300 py-8 mt-auto hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex flex-col md:flex-row justify-center items-center gap-4">
             <div className="text-sm text-slate-400 text-center">
@@ -89,6 +110,19 @@ export default function Layout() {
               Quản trị
             </Link>
           </div>
+        </div>
+      </footer>
+
+      {/* Mobile Footer (Simplified) */}
+      <footer className="bg-slate-800 text-slate-400 py-6 md:hidden mb-20">
+        <div className="px-4 text-center">
+          <p className="text-[10px] leading-relaxed">
+            &copy; {new Date().getFullYear()} Thăm dò dư luận nhà giáo ưu tú<br/>
+            Xét tặng Danh hiệu "Nhà giáo Ưu Tú"
+          </p>
+          <Link to="/admin" className="inline-flex items-center gap-1 mt-3 text-[10px] opacity-50">
+            <Settings className="h-3 w-3" /> Quản trị
+          </Link>
         </div>
       </footer>
     </div>
