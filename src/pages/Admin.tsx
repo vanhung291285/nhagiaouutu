@@ -24,7 +24,8 @@ export default function Admin() {
   const [candidate, setCandidate] = useState<any>(null);
   const [achievementsFiles, setAchievementsFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newFile, setNewFile] = useState({ category: 'Thành tích giảng dạy', fileName: '', size: 0 });
+  const [newFileCategory, setNewFileCategory] = useState('Thành tích giảng dạy');
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -233,22 +234,66 @@ export default function Admin() {
     }
   };
 
-  const handleAddFile = () => {
-    if (!newFile.fileName) {
-      alert('Vui lòng nhập tên file!');
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!isSupabaseConfigured()) {
+      alert('Cấu hình Supabase chưa hoàn tất. Vui lòng kiểm tra lại tệp .env hoặc thiết lập biến môi trường VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY.');
       return;
     }
-    const file = {
-      id: Date.now(),
-      ...newFile,
-      fileUrl: '#',
-      fileType: newFile.fileName.endsWith('.pdf') ? 'application/pdf' : 
-                newFile.fileName.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 
-                'image/jpeg',
-      size: Math.floor(Math.random() * 5000000) + 500000 // Mock size
-    };
-    setAchievementsFiles([...achievementsFiles, file]);
-    setNewFile({ category: 'Thành tích giảng dạy', fileName: '', size: 0 });
+
+    // Validate size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Dung lượng file quá lớn (tối đa 10MB).');
+      return;
+    }
+
+    setIsUploadingFile(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `achievement-${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      // Upload to 'achievements' bucket
+      const { error: uploadError } = await supabase.storage
+        .from('achievements')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        if (uploadError.message.includes('bucket not found') || uploadError.message.includes('does not exist')) {
+          throw new Error('Bucket "achievements" không tồn tại. Vui lòng vào Supabase Dashboard > Storage và tạo một bucket tên là "achievements" với chế độ Public.');
+        }
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('achievements')
+        .getPublicUrl(filePath);
+
+      const newAchievementFile = {
+        id: Date.now(),
+        category: newFileCategory,
+        fileName: file.name,
+        fileUrl: publicUrl,
+        fileType: file.type || 'application/octet-stream',
+        size: file.size
+      };
+
+      setAchievementsFiles([...achievementsFiles, newAchievementFile]);
+      alert('Tải file lên thành công!');
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      alert(`Lỗi khi tải file lên: ${error.message || 'Vui lòng kiểm tra lại kết nối mạng hoặc cấu hình Storage trên Supabase.'}`);
+    } finally {
+      setIsUploadingFile(false);
+      // Reset file input
+      e.target.value = '';
+    }
   };
 
   const handleDeleteFile = (id: number) => {
@@ -673,13 +718,6 @@ export default function Admin() {
                 </div>
                 <p className="text-[10px] text-slate-400 mt-3 italic">Lưu ý: Để tải ảnh lên, bạn cần tạo bucket tên "avatars" trong Supabase Storage.</p>
               </div>
-
-              <div className="border border-slate-200 rounded-xl p-4">
-                <h3 className="font-medium text-slate-800 mb-3">Tải lên hồ sơ thành tích</h3>
-                <button className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-medium transition-colors">
-                  <Upload className="h-4 w-4" /> Chọn file (Max 10MB)
-                </button>
-              </div>
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-4">
@@ -754,8 +792,8 @@ export default function Admin() {
                     <div>
                       <label className="block text-xs text-slate-500 mb-1">Danh mục</label>
                       <select 
-                        value={newFile.category} 
-                        onChange={e => setNewFile({...newFile, category: e.target.value})}
+                        value={newFileCategory} 
+                        onChange={e => setNewFileCategory(e.target.value)}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       >
                         <option>Thành tích giảng dạy</option>
@@ -766,24 +804,23 @@ export default function Admin() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Tên file (kèm đuôi .pdf, .docx, .jpg)</label>
+                      <label className="block text-xs text-slate-500 mb-1">Chọn file (PDF, DOCX, JPG - Max 10MB)</label>
                       <div className="flex gap-2">
-                        <input 
-                          type="text" 
-                          placeholder="VD: BaoCao2023.pdf"
-                          value={newFile.fileName}
-                          onChange={e => setNewFile({...newFile, fileName: e.target.value})}
-                          className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                        />
-                        <button 
-                          onClick={handleAddFile}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
+                        <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors text-sm">
+                          <Upload className="h-4 w-4" />
+                          {isUploadingFile ? 'Đang tải...' : 'Chọn file'}
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                            onChange={handleFileUpload}
+                            disabled={isUploadingFile}
+                          />
+                        </label>
                       </div>
                     </div>
                   </div>
+                  <p className="text-[10px] text-slate-400 mt-2 italic">Lưu ý: Để tải file lên, bạn cần tạo bucket tên "achievements" trong Supabase Storage.</p>
                 </div>
 
                 <div className="space-y-2">
