@@ -23,8 +23,11 @@ export default function Admin() {
   const [candidate, setCandidate] = useState<any>(null);
   const [achievementsFiles, setAchievementsFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newFileCategory, setNewFileCategory] = useState('Thành tích giảng dạy');
+  const [newFileCategory, setNewFileCategory] = useState('Báo cáo thành tích đạt được');
   const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [editingFileId, setEditingFileId] = useState<number | null>(null);
+  const [editingCategory, setEditingCategory] = useState('');
+  const [editingFileName, setEditingFileName] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -416,6 +419,23 @@ export default function Admin() {
     doc.save("BaoCaoKhaoSat.pdf");
   };
 
+  const handleEditFile = (file: any) => {
+    setEditingFileId(file.id);
+    setEditingCategory(file.category);
+    setEditingFileName(file.fileName);
+  };
+
+  const handleSaveEdit = (id: number) => {
+    setAchievementsFiles(achievementsFiles.map(f => 
+      f.id === id ? { ...f, category: editingCategory, fileName: editingFileName } : f
+    ));
+    setEditingFileId(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingFileId(null);
+  };
+
   const filteredResponses = responses.filter(r => 
     (r.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (r.unit || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -779,25 +799,21 @@ export default function Admin() {
                 <h3 className="text-lg font-semibold text-slate-800 mb-4">Quản lý Hồ sơ thành tích</h3>
                 
                 <div className="bg-white p-6 rounded-xl mb-6 border border-slate-200 shadow-sm">
-                  <p className="text-sm font-medium text-slate-800 mb-4">Thêm hồ sơ mới</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <p className="text-lg font-semibold text-slate-800 mb-6">Thêm hồ sơ mới</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div>
-                      <label className="block text-sm text-slate-500 mb-2">Danh mục</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Danh mục</label>
                       <select 
                         value={newFileCategory} 
                         onChange={e => setNewFileCategory(e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white"
                       >
-                        <option>Thành tích giảng dạy</option>
-                        <option>Sáng kiến kinh nghiệm</option>
-                        <option>Danh hiệu thi đua</option>
-                        <option>Bằng khen</option>
-                        <option>Hoạt động đóng góp cho cộng đồng</option>
+                        <option value="Báo cáo thành tích đạt được">Báo cáo thành tích đạt được</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm text-slate-500 mb-2">Chọn file (PDF, DOCX, JPG - Max 10MB)</label>
-                      <label className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors text-sm">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Chọn file (PDF, DOCX, JPG - Max 10MB)</label>
+                      <label className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors text-sm font-medium">
                         <Upload className="h-4 w-4" />
                         {isUploadingFile ? 'Đang tải...' : 'Chọn file'}
                         <input 
@@ -816,21 +832,54 @@ export default function Admin() {
                 <div className="space-y-2">
                   {achievementsFiles.map(file => (
                     <div key={file.id} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 p-2 rounded-lg">
-                          <FileText className="h-4 w-4 text-blue-600" />
+                      {editingFileId === file.id ? (
+                        <div className="flex-1 flex gap-2 items-center">
+                          <input 
+                            value={editingFileName} 
+                            onChange={e => setEditingFileName(e.target.value)}
+                            className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                          />
+                          <input 
+                            value={editingCategory} 
+                            onChange={e => setEditingCategory(e.target.value)}
+                            className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                          />
+                          <button onClick={() => handleSaveEdit(file.id)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-md">
+                            <Plus className="h-4 w-4" />
+                          </button>
+                          <button onClick={cancelEdit} className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-md">
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{file.fileName}</p>
-                          <p className="text-xs text-slate-500">{file.category}</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => handleDeleteFile(file.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-100 p-2 rounded-lg">
+                              <FileText className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">{file.fileName}</p>
+                              <p className="text-xs text-slate-500">{file.category}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={() => handleEditFile(file)}
+                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                              title="Sửa"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteFile(file.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                              title="Xóa"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
