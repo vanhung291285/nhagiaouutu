@@ -6,5 +6,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-k
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const isSupabaseConfigured = () => {
-  return import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  return url && url !== '' && !url.includes('placeholder') && key && key !== '' && !key.includes('placeholder');
 };
