@@ -5,7 +5,7 @@ import { getCandidateData, getAchievementsFiles } from '../store/mockData';
 import { Download, Search, Trash2, Edit, Upload, FileSpreadsheet, FileText, Settings, BarChart3, Plus, X, AlertCircle, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import PublicResults from './PublicResults';
@@ -407,7 +407,7 @@ export default function Admin() {
     ]);
 
     // @ts-ignore
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 25,
@@ -778,15 +778,15 @@ export default function Admin() {
               <div className="mt-8 pt-8 border-t border-slate-200">
                 <h3 className="text-lg font-semibold text-slate-800 mb-4">Quản lý Hồ sơ thành tích</h3>
                 
-                <div className="bg-slate-50 p-4 rounded-xl mb-6 space-y-4 border border-slate-200">
-                  <p className="text-sm font-medium text-slate-700">Thêm hồ sơ mới</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white p-6 rounded-xl mb-6 border border-slate-200 shadow-sm">
+                  <p className="text-sm font-medium text-slate-800 mb-4">Thêm hồ sơ mới</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Danh mục</label>
+                      <label className="block text-sm text-slate-500 mb-2">Danh mục</label>
                       <select 
                         value={newFileCategory} 
                         onChange={e => setNewFileCategory(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       >
                         <option>Thành tích giảng dạy</option>
                         <option>Sáng kiến kinh nghiệm</option>
@@ -796,23 +796,21 @@ export default function Admin() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Chọn file (PDF, DOCX, JPG - Max 10MB)</label>
-                      <div className="flex gap-2">
-                        <label className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors text-sm">
-                          <Upload className="h-4 w-4" />
-                          {isUploadingFile ? 'Đang tải...' : 'Chọn file'}
-                          <input 
-                            type="file" 
-                            className="hidden" 
-                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                            onChange={handleFileUpload}
-                            disabled={isUploadingFile}
-                          />
-                        </label>
-                      </div>
+                      <label className="block text-sm text-slate-500 mb-2">Chọn file (PDF, DOCX, JPG - Max 10MB)</label>
+                      <label className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors text-sm">
+                        <Upload className="h-4 w-4" />
+                        {isUploadingFile ? 'Đang tải...' : 'Chọn file'}
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                          onChange={handleFileUpload}
+                          disabled={isUploadingFile}
+                        />
+                      </label>
                     </div>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-2 italic">Lưu ý: Để tải file lên, bạn cần tạo bucket tên "achievements" trong Supabase Storage.</p>
+                  <p className="text-xs text-slate-400 mt-4 italic">Lưu ý: Để tải file lên, bạn cần tạo bucket tên "achievements" trong Supabase Storage.</p>
                 </div>
 
                 <div className="space-y-2">
