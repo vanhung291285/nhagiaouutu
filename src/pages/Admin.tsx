@@ -15,7 +15,6 @@ export default function Admin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isAdminTableEmpty, setIsAdminTableEmpty] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [activeTab, setActiveTab] = useState<'candidate' | 'survey' | 'charts'>('survey');
 
@@ -85,43 +84,27 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    const checkAdminTable = async () => {
-      if (isSupabaseConfigured()) {
-        try {
-          const { count, error } = await supabase
-            .from('admin_users')
-            .select('*', { count: 'exact', head: true });
-          
-          if (!error && count === 0) {
-            setIsAdminTableEmpty(true);
-          }
-        } catch (err) {
-          console.error('Error checking admin table:', err);
-        }
-      }
-    };
-    checkAdminTable();
     fetchData();
   }, []);
 
-  const handleInitializeAdmin = async () => {
+  const handleSignUp = async () => {
     if (!username || !password) {
-      alert('Vui lòng nhập Tên đăng nhập và Mật khẩu muốn tạo!');
+      alert('Vui lòng nhập Email và Mật khẩu muốn tạo!');
       return;
     }
 
     setIsInitializing(true);
     try {
-      const { error } = await supabase
-        .from('admin_users')
-        .insert([{ username, password }]);
+      const { error } = await supabase.auth.signUp({
+        email: username,
+        password: password,
+      });
 
       if (error) throw error;
       
-      alert('Khởi tạo tài khoản quản trị thành công! Bây giờ bạn có thể đăng nhập.');
-      setIsAdminTableEmpty(false);
+      alert('Đăng ký tài khoản thành công! Bây giờ bạn có thể đăng nhập.');
     } catch (err: any) {
-      alert(`Lỗi khởi tạo: ${err.message}`);
+      alert(`Lỗi đăng ký: ${err.message}`);
     } finally {
       setIsInitializing(false);
     }
@@ -140,24 +123,14 @@ export default function Admin() {
 
     if (isSupabaseConfigured()) {
       try {
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('username', username)
-          .eq('password', password)
-          .single();
+        const { error } = await supabase.auth.signInWithPassword({
+          email: username,
+          password: password,
+        });
 
         if (error) {
           console.error('Supabase login error:', error);
-          if (error.code === 'PGRST116') {
-            alert('Tên đăng nhập hoặc mật khẩu không chính xác!');
-          } else if (error.message.includes('relation "admin_users" does not exist')) {
-            alert('LỖI: Bảng "admin_users" chưa được tạo trên Supabase. Vui lòng chạy đoạn mã SQL tôi đã cung cấp trong SQL Editor.');
-          } else {
-            alert(`Lỗi đăng nhập: ${error.message}`);
-          }
-        } else if (!data) {
-          alert('Tên đăng nhập hoặc mật khẩu không chính xác!');
+          alert(`Lỗi đăng nhập: ${error.message}`);
         } else {
           setIsLoggedIn(true);
         }
@@ -455,14 +428,14 @@ export default function Admin() {
           
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
               <input 
-                type="text" 
+                type="email" 
                 required
                 className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Nhập tên đăng nhập..."
+                placeholder="Nhập email..."
               />
             </div>
             <div>
@@ -477,18 +450,16 @@ export default function Admin() {
               />
             </div>
             <div className="flex gap-3">
-              {isAdminTableEmpty ? (
                 <button 
                   type="button"
-                  onClick={handleInitializeAdmin}
+                  onClick={handleSignUp}
                   disabled={isInitializing}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
                   {isInitializing ? (
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : 'Khởi tạo tài khoản'}
+                  ) : 'Đăng ký'}
                 </button>
-              ) : (
                 <button 
                   type="submit"
                   disabled={isLoggingIn}
@@ -498,13 +469,10 @@ export default function Admin() {
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : 'Đăng nhập'}
                 </button>
-              )}
             </div>
-            {isAdminTableEmpty && (
-              <p className="text-[11px] text-emerald-600 text-center mt-4 bg-emerald-50 p-2 rounded-lg border border-emerald-100">
-                Hệ thống chưa có tài khoản quản trị. Nhập thông tin trên và nhấn <strong>Khởi tạo</strong> để tạo tài khoản đầu tiên.
-              </p>
-            )}
+            <p className="text-[11px] text-slate-500 text-center mt-4">
+              Nếu chưa có tài khoản, hãy nhập Email/Mật khẩu và nhấn <strong>Đăng ký</strong>.
+            </p>
           </form>
         </div>
       </div>
