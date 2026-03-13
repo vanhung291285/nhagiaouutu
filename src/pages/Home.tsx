@@ -1,45 +1,50 @@
 import { useState, useEffect } from 'react';
-import { getCandidateData } from '../store/mockData';
-import { Calendar, Briefcase, MapPin, Clock, GraduationCap, Award } from 'lucide-react';
+import { getCandidateData, getAchievementsFiles } from '../store/mockData';
+import { Calendar, Briefcase, MapPin, Clock, GraduationCap, Award, FileText, Download } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function Home() {
   const [candidate, setCandidate] = useState<any>(null);
+  const [achievementsFiles, setAchievementsFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCandidate = async () => {
+    const fetchData = async () => {
       setLoading(true);
       
       if (isSupabaseConfigured()) {
         try {
-          const { data, error } = await supabase
-            .from('candidate_data')
-            .select('*')
-            .eq('id', 1)
-            .maybeSingle();
+          const [candidateRes, filesRes] = await Promise.all([
+            supabase.from('candidate_data').select('*').eq('id', 1).maybeSingle(),
+            supabase.from('achievements_files').select('*').order('created_at', { ascending: false })
+          ]);
           
-          if (!error && data) {
-            setCandidate(data);
-            setLoading(false);
-            return;
+          if (!candidateRes.error && candidateRes.data) {
+            setCandidate(candidateRes.data);
+          } else {
+            setCandidate(getCandidateData());
+          }
+
+          if (!filesRes.error && filesRes.data) {
+            setAchievementsFiles(filesRes.data);
+          } else {
+            setAchievementsFiles(getAchievementsFiles());
           }
           
-          if (error) {
-            console.error('Supabase fetch error:', error);
-          }
+          setLoading(false);
+          return;
         } catch (error) {
-          console.error('Error fetching candidate from Supabase:', error);
+          console.error('Error fetching data from Supabase:', error);
         }
       }
 
       // Fallback to localStorage or mock data
-      const localData = getCandidateData();
-      setCandidate(localData);
+      setCandidate(getCandidateData());
+      setAchievementsFiles(getAchievementsFiles());
       setLoading(false);
     };
 
-    fetchCandidate();
+    fetchData();
   }, []);
 
   if (loading || !candidate) {
@@ -147,6 +152,32 @@ export default function Home() {
                   />
                 </div>
               </div>
+
+              {achievementsFiles && achievementsFiles.length > 0 && (
+                <div className="pt-6 border-t border-slate-200">
+                  <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">Hồ sơ minh chứng</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {achievementsFiles.map(file => (
+                      <a 
+                        key={file.id} 
+                        href={file.fileUrl || file.file_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center p-4 border border-slate-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-colors group"
+                      >
+                        <div className="bg-blue-100 p-3 rounded-lg mr-4 group-hover:bg-blue-200 transition-colors">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 truncate">{file.fileName || file.file_name}</p>
+                          <p className="text-xs text-slate-500 truncate">{file.category}</p>
+                        </div>
+                        <Download className="h-5 w-5 text-slate-400 group-hover:text-blue-600 ml-2 shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
