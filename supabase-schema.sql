@@ -73,3 +73,18 @@ VALUES (
     '<p>Nhập thành tích đạt được tại đây...</p>', 
     'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=256&h=256'
 ) ON CONFLICT (id) DO NOTHING;
+
+-- Insert mock survey responses if table is empty
+INSERT INTO public.survey_responses (id, name, position, unit, q1, q2, q3, q4, created_at)
+VALUES 
+    (1, 'Trần Thị B', 'Giáo viên', 'Tổ Toán', 'Biết rõ', '["Tâm huyết với nghề", "Thành tích giảng dạy xuất sắc"]'::jsonb, 'Rất xứng đáng', 'Thầy A rất xứng đáng.', '2023-10-25T10:00:00Z'),
+    (2, 'Lê Văn C', 'Tổ trưởng', 'Tổ Lý', 'Biết nhưng chưa đầy đủ', '["Có sáng kiến đổi mới giáo dục"]'::jsonb, 'Xứng đáng', '', '2023-10-26T14:30:00Z')
+ON CONFLICT (id) DO NOTHING;
+
+-- Insert mock achievements files if table is empty
+INSERT INTO public.achievements_files (id, category, "fileName", "fileUrl", "fileType", size)
+VALUES 
+    (1, 'Thành tích giảng dạy', 'BaoCaoThanhTich.pdf', '#', 'application/pdf', 2500000),
+    (2, 'Sáng kiến kinh nghiệm', 'SangKien2023.docx', '#', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1200000),
+    (3, 'Bằng khen', 'BangKhenBoGD.jpg', '#', 'image/jpeg', 800000)
+ON CONFLICT (id) DO NOTHING;
