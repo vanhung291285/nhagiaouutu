@@ -69,7 +69,12 @@ export default function Admin() {
         } else if (!achError && !achData) {
           setAchievementsFiles(prev => prev.length > 0 ? prev : getAchievementsFiles());
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (error.message && error.message.includes('Invalid Refresh Token')) {
+          await supabase.auth.signOut();
+          setIsLoggedIn(false);
+          alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        }
         console.error('Error fetching data from Supabase:', error);
         setCandidate(prev => prev || getCandidateData());
       }
@@ -198,6 +203,11 @@ export default function Admin() {
         // Re-fetch silently to get the latest state (including any generated IDs)
         fetchData(true);
       } catch (error: any) {
+        if (error.message && error.message.includes('Invalid Refresh Token')) {
+          await supabase.auth.signOut();
+          setIsLoggedIn(false);
+          alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        }
         console.error('Supabase Save Error:', error);
         const msg = error.message || JSON.stringify(error);
         alert(`LỖI LƯU TRỮ: ${msg}\n\nLưu ý: Dữ liệu hiện chỉ đang lưu tạm trên máy này. Hãy kiểm tra cấu hình Supabase.`);
