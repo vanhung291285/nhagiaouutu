@@ -160,7 +160,7 @@ export default function Admin() {
     if (!file) return;
 
     if (!isSupabaseConfigured()) {
-      alert('Vui lòng cấu hình Supabase để sử dụng tính năng tải ảnh lên.');
+      alert('Cấu hình Supabase chưa hoàn tất. Vui lòng kiểm tra lại tệp .env hoặc thiết lập biến môi trường VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY.');
       return;
     }
 
@@ -185,9 +185,17 @@ export default function Admin() {
       // Upload to 'avatars' bucket
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        if (uploadError.message.includes('bucket not found') || uploadError.message.includes('does not exist')) {
+          throw new Error('Bucket "avatars" không tồn tại. Vui lòng vào Supabase Dashboard > Storage và tạo một bucket tên là "avatars" với chế độ Public.');
+        }
+        throw uploadError;
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -198,7 +206,7 @@ export default function Admin() {
       alert('Tải ảnh đại diện lên thành công!');
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
-      alert(`Lỗi khi tải ảnh lên: ${error.message || 'Vui lòng kiểm tra lại bucket "avatars" trong Supabase Storage.'}`);
+      alert(`Lỗi khi tải ảnh lên: ${error.message || 'Vui lòng kiểm tra lại kết nối mạng hoặc cấu hình Storage trên Supabase.'}`);
     } finally {
       setIsUploadingAvatar(false);
     }
