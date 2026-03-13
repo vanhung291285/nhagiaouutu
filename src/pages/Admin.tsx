@@ -91,34 +91,43 @@ export default function Admin() {
   const handleSaveCandidate = async () => {
     if (isSupabaseConfigured()) {
       try {
-        // Save Candidate (Upsert)
+        // Chuẩn bị dữ liệu: Loại bỏ id cũ nếu có để tránh xung đột
+        const { id: _oldId, ...candidateData } = candidate;
+        
+        // 1. Lưu thông tin nhà giáo (Upsert với ID cố định là 1)
         const { error: candError } = await supabase
           .from('candidate_data')
-          .upsert({ id: 1, ...candidate, updated_at: new Date().toISOString() });
+          .upsert({ 
+            id: 1, 
+            ...candidateData, 
+            updated_at: new Date().toISOString() 
+          });
         
         if (candError) throw candError;
 
-        // Save Achievements (Delete all and re-insert for simplicity in this mock, or handle properly)
-        // In a real app, you'd track changes. Here we'll just sync.
+        // 2. Lưu hồ sơ thành tích
+        // Xóa hết cũ và chèn lại mới để đồng bộ hoàn toàn
         const { error: delError } = await supabase
           .from('achievements_files')
           .delete()
-          .not('id', 'is', null); // Delete all
+          .not('id', 'is', null);
         
         if (delError) throw delError;
 
         if (achievementsFiles.length > 0) {
+          // Giữ nguyên ID để khớp với bảng đã tạo
           const { error: insError } = await supabase
             .from('achievements_files')
-            .insert(achievementsFiles.map(({ id, ...rest }) => rest)); // Let Supabase generate IDs or keep them
+            .insert(achievementsFiles);
           
           if (insError) throw insError;
         }
 
-        alert('Đã lưu thông tin và hồ sơ thành tích lên Supabase thành công!');
-      } catch (error) {
-        console.error('Error saving to Supabase:', error);
-        alert('Có lỗi xảy ra khi lưu lên Supabase. Dữ liệu đã được lưu tạm vào trình duyệt.');
+        alert('CHÚC MỪNG: Dữ liệu đã được lưu vĩnh viễn lên Supabase! Bạn có thể xem từ bất kỳ máy tính nào.');
+      } catch (error: any) {
+        console.error('Supabase Save Error:', error);
+        const msg = error.message || JSON.stringify(error);
+        alert(`LỖI LƯU TRỮ: ${msg}\n\nLưu ý: Dữ liệu hiện chỉ đang lưu tạm trên máy này. Hãy kiểm tra cấu hình Supabase.`);
         localStorage.setItem('candidate_data', JSON.stringify(candidate));
         localStorage.setItem('achievements_files', JSON.stringify(achievementsFiles));
       }
@@ -180,7 +189,7 @@ export default function Admin() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `avatar-${Date.now()}.${fileExt}`;
-      const filePath = `public/${fileName}`;
+      const filePath = fileName;
 
       // Upload to 'avatars' bucket
       const { error: uploadError } = await supabase.storage
