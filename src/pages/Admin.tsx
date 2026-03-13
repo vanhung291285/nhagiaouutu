@@ -753,6 +753,13 @@ export default function Admin() {
                       readonly: false,
                       placeholder: 'Nhập thành tích đạt được, có thể copy/paste bảng từ Word/Excel...',
                       height: 400,
+                      buttons: [
+                        'bold', 'italic', 'underline', 'strikethrough', 'eraser', '|',
+                        'ul', 'ol', '|', 'font', 'fontsize', 'paragraph', '|',
+                        'image', 'file', 'video', '|',
+                        'brush', '|', 'undo', 'redo', '|',
+                        'fullsize', 'preview', 'print', '|', 'dots'
+                      ],
                       uploader: {
                         insertImageAsBase64URI: true
                       },
