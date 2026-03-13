@@ -728,7 +728,12 @@ export default function Admin() {
                       height: 400,
                       uploader: {
                         insertImageAsBase64URI: true
-                      }
+                      },
+                      askBeforePasteHTML: false,
+                      askBeforePasteFromWord: false,
+                      defaultActionOnPaste: 'insert_as_html',
+                      processPasteHTML: true,
+                      processPasteFromWord: true
                     }}
                     onBlur={newContent => handleCandidateChange('intro', newContent)}
                   />
