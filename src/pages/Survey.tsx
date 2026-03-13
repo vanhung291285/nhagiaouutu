@@ -60,21 +60,14 @@ export default function Survey() {
           
         if (error) throw error;
       } else {
-        // Fallback to local storage
-        const existing = JSON.parse(localStorage.getItem('survey_responses') || '[]');
-        existing.push({
-          ...formData,
-          id: Date.now(),
-          createdAt: new Date().toISOString()
-        });
-        localStorage.setItem('survey_responses', JSON.stringify(existing));
+        throw new Error('Supabase chưa được cấu hình. Dữ liệu khảo sát không thể lưu công khai.');
       }
       
       setSubmitted(true);
       localStorage.setItem('has_voted_survey', 'true');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting survey:', error);
-      alert('Có lỗi xảy ra khi gửi khảo sát. Vui lòng thử lại sau.');
+      alert(`Lỗi gửi khảo sát: ${error.message || 'Vui lòng kiểm tra kết nối mạng.'}`);
     } finally {
       setIsSubmitting(false);
     }
