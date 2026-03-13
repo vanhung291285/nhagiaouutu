@@ -147,7 +147,7 @@ export default function Home() {
               )}
               
               <div className={candidate.bio ? "pt-6 border-t border-slate-200" : ""}>
-                <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">BẢN KHAI THÀNH TÍCH ĐỀ NGHỊ XÉT TẶNG DANH HIỆU NHÀ GIÁO ƯU TÚ</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">{candidate.introTitle}</h2>
                 <div className="prose prose-slate max-w-none prose-table:border-collapse prose-table:w-full prose-td:border prose-td:border-slate-300 prose-td:p-2 prose-th:border prose-th:border-slate-300 prose-th:p-2 prose-th:bg-slate-50">
                   <div 
                     className="text-slate-600 leading-relaxed text-base sm:text-lg overflow-x-auto"
